@@ -24,7 +24,7 @@ class Robot:
     def move(self, distance:int) -> None:
         rad = math.radians(self.current_angle)
         self.current_position.x += distance * math.cos(rad)
-        self.current_position.x += distance * math.cos(rad)
+        self.current_position.y += distance * math.cos(rad)
         print(f"POS: {self.current_position.x} {self.current_position.y} ")
 
     def set(self, cleaning_type: CleaningType = CleaningType.WATER) -> None:
