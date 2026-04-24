@@ -1,6 +1,8 @@
 import math
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import Protocol
+
 
 class CleaningType(Enum):
     WATER = "water"
@@ -12,34 +14,44 @@ class Position:
     x:float
     y:float
 
+
+class Logger(Protocol):
+    def log(self, message: str) -> None: ...
+
+class ConsoleLogger:
+    def log(self, message: str) -> None:
+        print(message)
+
 @dataclass
 class Robot:
     position: Position = field(default_factory=Position)
     cleaning_type: CleaningType = CleaningType.WATER
     angle: int = 0
     is_working: bool = False
+    logger: Logger = field(default_factory=ConsoleLogger)
+
 
     def turn(self, angle: int) -> None:
         self.current_angle = (self.current_angle + angle) % 360
-        print(f"ANGLE: {self.current_angle}")
+        self.logger.log(f"ANGLE: {self.current_angle}")
 
     def move(self, distance:int) -> None:
         rad = math.radians(self.current_angle)
         self.current_position.x += distance * math.cos(rad)
         self.current_position.y += distance * math.cos(rad)
-        print(f"POS: {self.current_position.x} {self.current_position.y} ")
+        self.logger.log(f"POS: {self.current_position.x} {self.current_position.y} ")
 
     def set(self, cleaning_type: CleaningType = CleaningType.WATER) -> None:
         self.current_cleaning_type = cleaning_type
-        print(f"STATE: {cleaning_type.value}")
+        self.logger.log(f"STATE: {cleaning_type.value}")
 
     def start(self) -> None:
         self.is_working = True
-        print(f"START WITH {self.current_cleaning_type.value}")
+        self.logger.log(f"START WITH {self.current_cleaning_type.value}")
 
     def stop(self) -> None:
         self.is_working = False
-        print(f"STOP")
+        self.logger.log(f"STOP")
 
 
 def run_program(commands: list[str]) -> None:
