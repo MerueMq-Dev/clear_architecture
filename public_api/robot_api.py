@@ -20,3 +20,6 @@ class RobotAPI:
 
     def stop(self):
         self._state = robot.stop(self._transfer, self._state)
+
+    def run_script(self, commands: list[str]):
+        self._state = robot.make(self._transfer, commands, self._state)
