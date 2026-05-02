@@ -21,7 +21,7 @@ def move(transfer,dist,state):
         state.y + dist * math.sin(angle_rads),
         state.angle,
         state.state)
-    transfer(('POS(',new_state.x,',',new_state.y,')'))
+    transfer(('POS',new_state.x,',',new_state.y,))
     return new_state
 
 # поворот
@@ -49,17 +49,17 @@ def set_state(transfer,new_internal_state,state):
         state.y,
         state.angle,
         self_state)
-    transfer(('STATE',self_state))
+    transfer(f'STATE {self_state}')
     return new_state
 
 # начало чистки
 def start(transfer,state):
-    transfer(('START WITH',state.state))
+    transfer(f'START WITH {state.state}')
     return state
 
 # конец чистки
 def stop(transfer,state):
-    transfer(('STOP',))
+    transfer('STOP')
     return state
 
 

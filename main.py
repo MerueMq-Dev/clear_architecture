@@ -1,17 +1,13 @@
-from modular_cleaner import Cleaner, run, transfer_to_cleaner
-
+import public_api.robot_api_stateless as api
 
 def main() -> None:
-    cleaner = Cleaner(transfer_to_cleaner)
-    run(cleaner, (
-        'move 100',
-        'turn -90',
-        'set soap',
-        'start',
-        'move 50',
-        'stop',
-    ))
-
+    state = api.initial_state()
+    state = api.set_mode("soap", state)
+    state = api.start(state)
+    state = api.move(100, state)
+    state = api.turn(90, state)
+    state = api.move(50, state)
+    state = api.stop(state)
 
 if __name__ == '__main__':
     main()
