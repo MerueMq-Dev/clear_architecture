@@ -21,7 +21,7 @@ def move(transfer,dist,state):
         state.y + dist * math.sin(angle_rads),
         state.angle,
         state.state)
-    transfer(('POS',new_state.x,',',new_state.y,))
+    transfer(f'POS: x:{new_state.x}, y:{new_state.y}')
     return new_state
 
 # поворот
@@ -31,7 +31,7 @@ def turn(transfer,turn_angle,state):
         state.y,
         state.angle + turn_angle,
         state.state)
-    transfer(('ANGLE',state.angle))
+    transfer(f'ANGLE {state.angle}')
     return new_state
 
 # установка режима работы
