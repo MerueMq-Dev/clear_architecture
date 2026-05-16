@@ -1,7 +1,7 @@
-import functional_di_robot.pure_robot as pr
-from functional_di_robot.transfers import console_transfer
-from functional_di_robot.injection import inject
-from functional_di_robot.сlients  import run, navigator_commands, full_commands
+import functional_di_robot_2.pure_robot as pr
+from  functional_di_robot_2.transfers import console_transfer
+from  functional_di_robot_2.dispatch import make_dispatch
+from  functional_di_robot_2.clients import run, navigate
 
 
 SQUARE_ROUTE = [
@@ -11,30 +11,20 @@ SQUARE_ROUTE = [
     ('move', 10), ('turn', 90),
 ]
 
-SHORT_ROUTE = [
-    ('move', 5), ('turn', 45), ('move', 3),
-]
-
 CLEAN_PLAN = [
-    ('set', 'soap'), ('start', None),
+    ('set', 'soap'),
+    ('start',),
     ('move', 10), ('turn', 90), ('move', 10),
-    ('stop', None),
+    ('stop',),
 ]
 
 
 if __name__ == "__main__":
-    # Точка сборки
-    api = inject(console_transfer)
+    dispatch = make_dispatch(console_transfer)
     state = pr.RobotState(0.0, 0.0, 0.0, 0)
 
-    navigator = navigator_commands(api)
-    full      = full_commands(api)
-
     print("--- квадрат ---")
-    state = run(navigator, SQUARE_ROUTE, state)
-
-    print("--- короткий маршрут ---")
-    state = run(navigator, SHORT_ROUTE, state)
+    state = navigate(dispatch, SQUARE_ROUTE, state)
 
     print("--- патруль с уборкой ---")
-    state = run(full, CLEAN_PLAN, state)
+    state = run(dispatch, CLEAN_PLAN, state)
