@@ -1,31 +1,32 @@
-"""
-Клиент: собирает СПИСОК команд (ничего не выполняя),
-затем отдаёт его исполнителю — все команды выполняются разом.
-"""
-import  command.pure_robot as pr
-from command.commands import Move, Turn, SetState, Start, Stop
-from command.executor import run_batch
+from event_sourcing.event_store import EventStore
+from event_sourcing.command_handler import CommandHandler
+from event_sourcing.reducer import replay
 
+ROBOT = "cleaner-1"
 
-def transfer_to_cleaner(message):
-    print(message)
-
-
-# Клиент только СОЗДАЁТ команды — робот пока не двигается.
-batch = [
-    Move(100),
-    Turn(-90),
-    SetState('soap'),
-    Start(),
-    Move(50),
-    Stop(),
-]
 
 
 if __name__ == "__main__":
-    initial = pr.RobotState(0.0, 0.0, 0.0, pr.WATER)
+    store = EventStore()
+    handler = CommandHandler(store)
 
-    final = run_batch(transfer_to_cleaner, batch, initial)
+    # Отправляю команды по одной.
+    commands = [
+        ('move', 100),
+        ('turn', -90),
+        ('set', 'soap'),
+        ('start',),
+        ('move', 50),
+        ('stop',),
+    ]
+    for command in commands:
+        handler.handle(ROBOT, command)
 
-    print("--- финальное состояние ---")
-    print(final)
+    # Смотрю, какие факты накопились в сторе.
+    print("--- что накопилось в Event Store ---")
+    for e in store.load(ROBOT):
+        print(e)
+
+    # Текущее состояние = проигрывание всех событий с нуля.
+    print("\n--- текущее состояние (проиграл все события) ---")
+    print(replay(store.load(ROBOT)))
