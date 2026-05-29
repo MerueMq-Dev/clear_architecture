@@ -1,61 +1,55 @@
-from either.robot_state import RobotState, WATER, SOAP
-from either.state_monad import StateMonad
-from either.operations import move, turn, set_state, start, stop
+from  ast_interpreter.ast_nodes import Move, Turn, SetState, Start, Stop
+from ast_interpreter.interpreter import RealInterpreter, SOAP as SOAP_MODE
+from ast_interpreter.analyzer import analyze
 
 
-def show(title, result):
-    print(f"--- {title} ---")
-    print("финальное состояние:", result.state)
-    print("итоговый ответ:     ", result.response)
-    print("ok:                 ", result.ok())
-    print("лог:")
-    for line in result.log:
-        print(" ", line)
-    print()
+# сценарий 1: прямая программа, без реакции на ответы
+simple_program = Move(50, lambda _:
+    Turn(90, lambda _:
+        SetState(SOAP_MODE, lambda _:
+            Start(lambda _:
+                Move(30, lambda _:
+                    Stop())))))
+
+
+# Сценарий 2: программа реагирует на ответ
+# Если первый move упёрся в стену — поворачиваем и пробуем в другую сторону.
+# Если прошёл нормально — продолжаем по плану.
+
+def smart_program():
+    def after_first_move(response):
+        if response.ok:
+            # всё нормально, идём дальше
+            return SetState(SOAP_MODE, lambda _: Stop())
+        else:
+            # упёрлись в стену -> разворот и попытка №2
+            return Turn(180, lambda _:
+                Move(20, lambda _:
+                    SetState(SOAP_MODE, lambda _:
+                        Stop())))
+
+    return Move(200, after_first_move)   # 200 точно выйдет за границу
 
 
 if __name__ == "__main__":
-    initial = lambda: StateMonad(RobotState(0.0, 0.0, 0.0, WATER))
+    # анализ дерева
+    print("--- анализ простой программы ---")
+    print(dict(analyze(simple_program)))
 
-    # 1. Всё хорошо: вода и мыло на месте, в границы укладываемся
-    resources_ok = {'water': 1, 'soap': 1}
-    happy = (initial()
-        .bind(move(100))
-        .bind(turn(-90))
-        .bind(set_state(SOAP, resources_ok))
-        .bind(start)
-        .bind(move(50))                          # сейчас тоже упрётся в y < 0
-        .bind(stop))
-    show("ХОРОШИЙ путь", happy)
+    # реальное выполнение простой программы
+    print("\n--- выполнение простой программы ---")
+    interp = RealInterpreter()
+    interp.run(simple_program)
+    print("состояние:", interp.state)
+    print("лог:")
+    for line in interp.log:
+        print(" ", line)
 
-    # 2. Чтобы happy реально прошёл — отвернёмся внутрь поля,
-    #    а сценарий с обрывом сделаем отдельно.
-    really_happy = (initial()
-        .bind(move(50))
-        .bind(turn(90))                          # поворот ВВЕРХ, не вниз
-        .bind(set_state(SOAP, resources_ok))
-        .bind(start)
-        .bind(move(50))                          # уедем в (50, 50)
-        .bind(stop))
-    show("ХОРОШИЙ путь без барьера", really_happy)
-
-    # 3. Барьер в середине: всё после move(50) вниз — пропускается
-    crash = (initial()
-        .bind(move(100))
-        .bind(turn(-90))
-        .bind(set_state(SOAP, resources_ok))
-        .bind(start)
-        .bind(move(50))                          # BARRIER
-        .bind(set_state(WATER, resources_ok))    # пропустится
-        .bind(stop))                             # пропустится
-    show("ОБРЫВ по барьеру", crash)
-
-    # 4. Нет воды: ошибка раньше, дальнейшие шаги тоже не запускаются
-    resources_dry = {'water': 0, 'soap': 1}
-    dry = (initial()
-        .bind(move(10))
-        .bind(set_state(WATER, resources_dry))   # OUT_OF_WATER, цепочка стоп
-        .bind(start)                             # пропустится
-        .bind(move(20))                          # пропустится
-        .bind(stop))                             # пропустится
-    show("ОБРЫВ по ресурсам", dry)
+    # выполнение умной программы с реакцией на barrier
+    print("\n--- выполнение умной программы (упрётся в стену) ---")
+    interp2 = RealInterpreter()
+    interp2.run(smart_program())
+    print("состояние:", interp2.state)
+    print("лог:")
+    for line in interp2.log:
+        print(" ", line)
