@@ -21,7 +21,7 @@ class BaseCaps:
             }
         }
 
-class Idle:
+class Idle(BaseCaps):
 
     def __init__(self, state):
         self._state = state
