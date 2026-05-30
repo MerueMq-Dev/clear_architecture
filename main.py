@@ -1,29 +1,19 @@
-from cleaner.cleaner import Cleaner, CleaningMode
+from capabilities.api import create_robot
 
 
-def transfer(message):
-    print(message)
+def transfer(msg):
+    print(msg)
 
 
-if __name__ == "__main__":
-    initial = Cleaner(transfer)
+robot = create_robot(transfer)
 
-    final = (initial
-             .move(100)
-             .turn(-90)
-             .set_mode(CleaningMode.SOAP)
-             .start()
-             .move(50)
-             .stop())
+print(type(robot).__name__)
+# Idle
 
-    print("\n--- финальное состояние ---")
-    print(final)
 
-    print("\n--- initial остался прежним ---")
-    print(initial)
+robot = robot.move(50)
 
-    print("\n--- проверка иммутабельности ---")
-    try:
-        initial.x = 999
-    except Exception as e:
-        print(f"{type(e).__name__}: {e}")
+robot = robot.start()
+
+print(type(robot).__name__)
+# Cleaning
